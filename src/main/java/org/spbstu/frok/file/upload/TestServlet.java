@@ -18,7 +18,10 @@ public class TestServlet extends HttpServlet {
             throws ServletException, IOException {
 
         for (Part part : request.getParts()) {
-            part.write(part.getSubmittedFileName());
+            String submittedFileName = part.getSubmittedFileName();
+            if (submittedFileName != null) {
+                part.write(submittedFileName);
+            }
         }
     }
 
