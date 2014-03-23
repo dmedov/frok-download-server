@@ -10,9 +10,9 @@ import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet(urlPatterns = {"/api"})
+@WebServlet(urlPatterns = {"/links"})
 @MultipartConfig(location = "/tmp")
-public class TestServlet extends HttpServlet {
+public class PhotoLinksUploadServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -25,6 +25,7 @@ public class TestServlet extends HttpServlet {
         }
     }
 
+    // for test
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -55,6 +56,6 @@ public class TestServlet extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "TestServlet";
+        return "ImageUploadServlet";
     }
 }
