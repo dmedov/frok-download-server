@@ -1,4 +1,4 @@
-package org.spbstu.frok.file.upload;
+package org.spbstu.frok.classifier;
 
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
@@ -15,52 +15,25 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 
-@WebServlet(urlPatterns = {"/links"})
-@MultipartConfig(location = "/tmp")
-public class PhotoLinksUploadServlet extends HttpServlet {
-    private static final String UPLOAD_DIRECTORY = "/tmp/";
-    private static final String PHOTOS_EXTENSION = ".jpg";
+
+@WebServlet(urlPatterns = {"/rec"})
+public class ClassifierTestServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String filename = null;
-
-        for (Part part : request.getParts()) {
-            String submittedFileName = part.getSubmittedFileName();
-            if (submittedFileName != null) {
-                part.write(submittedFileName);
-                filename = submittedFileName;
-            }
-        }
-
-        JSONParser parser = new JSONParser();
-
         try {
-            Object obj = parser.parse(new FileReader("/tmp/" + filename));
-
-            JSONObject jsonObject = (JSONObject) obj;
-
-            String userId = (String) jsonObject.get("user_id");
-
-            // parse photo links
-            JSONArray photos = (JSONArray) jsonObject.get("photos");
-            Iterator<String> iterator = photos.iterator();
-            while (iterator.hasNext()) {
-                String next = iterator.next();
-                String newFilename = next.substring(next.indexOf("?") + 9, next.indexOf("&"));
-                FileUtils.copyURLToFile(new URL(next), new File(UPLOAD_DIRECTORY + userId + File.separator + newFilename + PHOTOS_EXTENSION));
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
+            Classifier.executeCommand(new ArrayList<String>() {{
+                add("touch");
+                add("test2.txt");
+            }});
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
     }
 
     // for test
@@ -84,6 +57,8 @@ public class PhotoLinksUploadServlet extends HttpServlet {
             out.println("</body>");
             out.println("</html>");
         }
+
+        processRequest(request, response);
     }
 
     @Override
@@ -94,6 +69,6 @@ public class PhotoLinksUploadServlet extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "ImageUploadServlet";
+        return "ClassifierTestServlet";
     }
 }

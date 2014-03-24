@@ -7,7 +7,7 @@ public class Classifier
 {
     private static final String PROCESS_DIRECTORY = "/tmp/";
 
-    private static String executeCommand(List<String> command) throws IOException, InterruptedException
+    public static String executeCommand(List<String> command) throws IOException, InterruptedException
     {
         String output = "";
 
