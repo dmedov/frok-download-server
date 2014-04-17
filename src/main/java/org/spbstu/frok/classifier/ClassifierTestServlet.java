@@ -22,18 +22,17 @@ import java.util.Iterator;
 @WebServlet(urlPatterns = {"/rec"})
 public class ClassifierTestServlet extends HttpServlet {
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
+            //throws ServletException, IOException {
 
-        try {
-            Classifier.executeCommand(new ArrayList<String>() {{
-                add("touch");
-                add("test2.txt");
-            }});
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+//        try {
+//            Classifier.executeCommand(new ArrayList<String>() {{
+//                add("touch");
+//                add("test2.txt");
+//            }});
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     // for test
