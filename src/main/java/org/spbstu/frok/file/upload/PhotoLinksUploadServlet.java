@@ -17,6 +17,7 @@ import java.io.*;
 import java.net.URL;
 import java.util.Iterator;
 
+@Deprecated
 @WebServlet(urlPatterns = {"/links"})
 @MultipartConfig(location = "/tmp")
 public class PhotoLinksUploadServlet extends HttpServlet {
@@ -51,6 +52,7 @@ public class PhotoLinksUploadServlet extends HttpServlet {
             while (iterator.hasNext()) {
                 String next = iterator.next();
                 String newFilename = next.substring(next.indexOf("?") + 9, next.indexOf("&"));
+                // save file by url
                 FileUtils.copyURLToFile(new URL(next), new File(UPLOAD_DIRECTORY + userId + File.separator + newFilename + PHOTOS_EXTENSION));
             }
 
