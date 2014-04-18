@@ -17,7 +17,6 @@ import java.io.*;
 import java.net.URL;
 import java.util.Iterator;
 
-@Deprecated
 @WebServlet(urlPatterns = {"/links"})
 @MultipartConfig(location = "/tmp")
 public class PhotoLinksUploadServlet extends HttpServlet {

@@ -18,41 +18,51 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-@ServerEndpoint("/echo")
+@ServerEndpoint("/main")
 public class MainEndPoint {
 
     @OnMessage
     public void onMessage(Session session, String msg) {
         try {
-            JSONObject jsonObject = null;
-            try {
-                jsonObject = (JSONObject) new JSONParser().parse(msg);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            String userId = "100";
 
-            String userId = (String) jsonObject.get("user_id");
+            //String message = msg;
 
-            // parse photo links
-            JSONArray photos = (JSONArray) jsonObject.get("photos");
-            Iterator<String> iterator = photos.iterator();
-            while (iterator.hasNext()) {
-                String next = iterator.next();
-                String newFilename = next.substring(next.indexOf("?") + 9, next.indexOf("&"));
-                // save file by url
-                FileUtils.copyURLToFile(new URL(next), new File( Classifier.getUsersFolderPath() +
-                                                                 userId +
-                                                                 File.separator +
-                                                                 newFilename +
-                                                                 Classifier.getImageType()));
-            }
+//            if (msg.contains("{")) {
+//                JSONObject jsonObject = null;
+//                try {
+//                    jsonObject = (JSONObject) new JSONParser().parse(message);
+//                } catch (ParseException e) {
+//                    e.printStackTrace();
+//                }
+
+                //userId = (String) jsonObject.get("user_id");
+
+                // parse photo links
+//            JSONArray photos = (JSONArray) jsonObject.get("photos");
+//            Iterator<String> iterator = photos.iterator();
+//            while (iterator.hasNext()) {
+//                String next = iterator.next();
+//                String newFilename = next.substring(next.indexOf("?") + 9, next.indexOf("&"));
+//                // save file by url
+//                FileUtils.copyURLToFile(new URL(next), new File( Classifier.getUsersFolderPath() +
+//                                                                 userId +
+//                                                                 File.separator +
+//                                                                 newFilename +
+//                                                                 Classifier.getImageType()));
+//            }
+
+                //  }
+
+
+//            }
 
             // classifier saves results in result.json, full path in resultJsonPath
             //runClassifier();
 
             // open an result.json file, save content of file in string, and send it throught webSockets
             String resultJson = new String(Files.readAllBytes(Paths.get(Classifier.getResultFilename())));
-            session.getBasicRemote().sendText(resultJson);
+            session.getBasicRemote().sendText(resultJson);//resultJson);
 
         } catch (IOException e) {
         }
@@ -60,7 +70,7 @@ public class MainEndPoint {
 
     private void runClassifier() throws IOException {
         Classifier.getInstance().faceDetection(null);
-        Classifier.getInstance().learn();
+        //Classifier.getInstance().learn();
         Classifier.getInstance().recognize();
     }
 }

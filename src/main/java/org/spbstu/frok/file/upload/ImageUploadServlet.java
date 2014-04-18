@@ -20,7 +20,7 @@ public class ImageUploadServlet extends HttpServlet {
         for (Part part : request.getParts()) {
             String submittedFileName = part.getSubmittedFileName();
             if (submittedFileName != null) {
-                part.write(submittedFileName);
+                part.write("target.jpg");//part.write(submittedFileName);
             }
         }
     }
