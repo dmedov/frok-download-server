@@ -1,58 +1,53 @@
 package org.spbstu.frok.classifier;
 
-import org.spbstu.frok.Utils;
-
-import java.util.ArrayList;
+import java.io.*;
+import java.net.Socket;
 
 public class Classifier
 {
-    private static final String PROCESS_DIRECTORY = "C:\\Face_detector_OK\\";
-    private static final String RESULT_FILENAME   = "result.json";
-    private static final String EXE_PATH          = PROCESS_DIRECTORY + "FaceDetectionApp.exe";
-    private static final String USERS_FOLDER      = PROCESS_DIRECTORY + "tmp\\";
-    private static final String IMAGE_TYPE        = ".jpg";
+    private static final String  IP   = "192.168.1.105";
+    private static final Integer PORT = 27015;
 
     private static Classifier INSTANCE = new Classifier();
+    private Socket socket;
+
     private Classifier() {}
+
     public static Classifier getInstance() {
         return INSTANCE;
     }
 
-    public void faceDetection(final String userId) {
-        Utils.executeCommand(PROCESS_DIRECTORY, new ArrayList<String>() {{
-                                                        add(EXE_PATH);
-                                                        add(USERS_FOLDER + userId + "\\");
-                                                        add("-f");
-        }});
+    private void connect() throws IOException {
+        socket = new Socket(IP, PORT);
     }
 
-    public void learn() {
-        Utils.executeCommand(PROCESS_DIRECTORY, new ArrayList<String>() {{
-                                                        add(EXE_PATH);
-                                                        add(USERS_FOLDER);
-                                                        add("-l");
-        }});
+    public void send(String data) throws IOException {
+        if (socket == null) {
+            connect();
+        }
+
+        OutputStream out = socket.getOutputStream();
+        out.write(data.getBytes());
     }
 
-    public void recognize() {
-        Utils.executeCommand(PROCESS_DIRECTORY, new ArrayList<String>() {{
-                                                        add(EXE_PATH);
-                                                        add(USERS_FOLDER + "target.jpg");
-                                                        add("-r");
-                                                        add(USERS_FOLDER);
-        }});
-    }
+    public String recieve() {
+        if (socket == null) {
+            return null;
+        }
 
-    public static String getResultFilename() {
-        return PROCESS_DIRECTORY + RESULT_FILENAME;
-    }
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-    public static String getUsersFolderPath() {
-        return USERS_FOLDER;
-    }
+            String response;
 
-    public static String getImageType() {
-        return IMAGE_TYPE;
+            while ((response = in.readLine()) != null) {
+                return response;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
 

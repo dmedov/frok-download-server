@@ -7,8 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 
 @WebServlet(urlPatterns = {"/imageupload"})
 @MultipartConfig(location = "/tmp")
@@ -16,15 +15,15 @@ public class ImageUploadServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         for (Part part : request.getParts()) {
             String submittedFileName = part.getSubmittedFileName();
             if (submittedFileName != null) {
-                part.write("target.jpg");//part.write(submittedFileName);
+                part.write(submittedFileName);
             }
         }
     }
 
+    // for test
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
