@@ -1,4 +1,10 @@
-package org.spbstu.frok.file.upload;
+package org.spbstu.frok.classifier;
+
+import org.apache.commons.io.FileUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -8,19 +14,25 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
 
-@WebServlet(urlPatterns = {"/imageupload"})
-@MultipartConfig(location = "/tmp")
-public class ImageUploadServlet extends HttpServlet {
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        for (Part part : request.getParts()) {
-            String submittedFileName = part.getSubmittedFileName();
-            if (submittedFileName != null) {
-                part.write(submittedFileName);
-            }
-        }
+@WebServlet(urlPatterns = {"/rec"})
+public class ClassifierTestServlet extends HttpServlet {
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
+            //throws ServletException, IOException {
+
+//        try {
+//            Classifier.executeCommand(new ArrayList<String>() {{
+//                add("touch");
+//                add("test2.txt");
+//            }});
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     // for test
@@ -44,6 +56,8 @@ public class ImageUploadServlet extends HttpServlet {
             out.println("</body>");
             out.println("</html>");
         }
+
+        processRequest(request, response);
     }
 
     @Override
@@ -54,6 +68,6 @@ public class ImageUploadServlet extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "ImageUploadServlet";
+        return "ClassifierTestServlet";
     }
 }

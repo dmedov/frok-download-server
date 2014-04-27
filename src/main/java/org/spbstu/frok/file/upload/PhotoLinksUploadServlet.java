@@ -21,7 +21,7 @@ import java.util.Iterator;
 @MultipartConfig(location = "/tmp")
 public class PhotoLinksUploadServlet extends HttpServlet {
     private static final String UPLOAD_DIRECTORY = "/tmp/";
-
+    private static final String PHOTOS_EXTENSION = ".jpg";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -49,14 +49,17 @@ public class PhotoLinksUploadServlet extends HttpServlet {
             JSONArray photos = (JSONArray) jsonObject.get("photos");
             Iterator<String> iterator = photos.iterator();
             while (iterator.hasNext()) {
-                FileUtils.copyURLToFile(new URL(iterator.next()), new File(UPLOAD_DIRECTORY + userId + File.separator + "test.png"));
+                String next = iterator.next();
+                String newFilename = next.substring(next.indexOf("?") + 9, next.indexOf("&"));
+                // save file by url
+                FileUtils.copyURLToFile(new URL(next), new File(UPLOAD_DIRECTORY + userId + File.separator + newFilename + PHOTOS_EXTENSION));
             }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
