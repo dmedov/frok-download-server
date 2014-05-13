@@ -18,7 +18,7 @@ import java.net.URL;
 import java.util.Iterator;
 
 @WebServlet(urlPatterns = {"/links"})
-@MultipartConfig(location = "/tmp")
+@MultipartConfig(location = "/Users/den/Documents/syncW7/frok")
 public class PhotoLinksUploadServlet extends HttpServlet {
     private static final String UPLOAD_DIRECTORY = "/tmp/";
     private static final String PHOTOS_EXTENSION = ".jpg";

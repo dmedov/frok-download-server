@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class Classifier
 {
-    private static final String  IP   = "192.168.1.105";
+    private static final String  IP   = "10.211.55.8";
     private static final Integer PORT = 27015;
 
     private static Classifier INSTANCE = new Classifier();
@@ -22,7 +22,10 @@ public class Classifier
     }
 
     public void send(String data) throws IOException {
-        if (socket == null) {
+        if (socket == null || !socket.isConnected() || socket.isClosed()) {
+            if (socket != null) {
+                socket.close();
+            }
             connect();
         }
 

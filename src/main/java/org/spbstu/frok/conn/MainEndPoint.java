@@ -1,18 +1,32 @@
 package org.spbstu.frok.conn;
 
+import org.apache.commons.io.FileUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.spbstu.frok.classifier.Classifier;
 
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @ServerEndpoint("/main")
 public class MainEndPoint {
+    private static final ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
+    private static final String UPLOAD_DIRECTORY = "/Users/den/Documents/syncW7/frok";
+    private static final String PHOTOS_EXTENSION = ".jpg";
+
+    private Session session;
+
     @OnMessage
     public void onMessage(Session session, String msg) {
         try {
-            Classifier.getInstance().send("test");
+            this.session = session;
+
+            downloadImagesAndLearn(msg);
         } catch (IOException e) {
             try {
                 session.getBasicRemote().sendText("error : cant't connect to classifier");
@@ -23,8 +37,39 @@ public class MainEndPoint {
         }
 
         try {
-            session.getBasicRemote().sendText(msg);
+            session.getBasicRemote().sendText("test");
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        } catch (Exception e) {
+//
+//        }
+    }
+
+    private void downloadImagesAndLearn(String msg) throws IOException {
+        Map<String,Object> jsonMap = mapper.readValue(msg, Map.class);
+        try {
+            String userId = (String) jsonMap.get("user_id");
+
+            List<String> photoLinks = (ArrayList) jsonMap.get("photos");
+            if (photoLinks != null) {
+                for (String link : photoLinks) {
+                    // parse photo_id from link
+                    String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
+                    // save file by url
+                    FileUtils.copyURLToFile(new URL(link), new File( UPLOAD_DIRECTORY + File.separator +
+                                                                     userId + File.separator +
+                                                                     "photos" + File.separator +
+                                                                     photoId + PHOTOS_EXTENSION));
+                }
+            }
+
+            // send learn command to classifier
+            Classifier.getInstance().send("{\"cmd\":\"train\", \"ids\":[\"" + userId + "\"]}");
+
+            // get response from classifier
+            session.getBasicRemote().sendText(Classifier.getInstance().recieve());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
