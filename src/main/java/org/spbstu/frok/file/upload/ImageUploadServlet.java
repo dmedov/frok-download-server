@@ -1,5 +1,7 @@
 package org.spbstu.frok.file.upload;
 
+import org.spbstu.frok.conn.MainEndPoint;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;

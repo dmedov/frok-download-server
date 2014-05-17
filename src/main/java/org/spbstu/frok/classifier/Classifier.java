@@ -11,6 +11,9 @@ public class Classifier
     private static Classifier INSTANCE = new Classifier();
     private Socket socket;
 
+    private BufferedReader socketInputStream;
+    private OutputStream socketOutputStream;
+
     private Classifier() {}
 
     public static Classifier getInstance() {
@@ -19,31 +22,39 @@ public class Classifier
 
     private void connect() throws IOException {
         socket = new Socket(IP, PORT);
+
+        socketInputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        socketOutputStream = socket.getOutputStream();
     }
 
     public void send(String data) throws IOException {
         if (socket == null || !socket.isConnected() || socket.isClosed()) {
-            if (socket != null) {
-                socket.close();
-            }
+            clearSocket();
             connect();
         }
 
-        OutputStream out = socket.getOutputStream();
-        out.write(data.getBytes());
+        socketOutputStream.write(data.getBytes());
     }
 
-    public String recieve() {
-        if (socket == null) {
+    private void clearSocket() throws IOException {
+        if (socket != null) {
+            socket.close();
+            socketOutputStream.close();
+            socketInputStream.close();
+        }
+    }
+
+    public String recieve() throws IOException {
+        if (socket == null || !socket.isConnected() || socket.isClosed()) {
+            clearSocket();
+            connect();
             return null;
         }
 
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
             String response;
 
-            while ((response = in.readLine()) != null) {
+            while ((response = socketInputStream.readLine()) != null) {
                 return response;
             }
         } catch (IOException e) {

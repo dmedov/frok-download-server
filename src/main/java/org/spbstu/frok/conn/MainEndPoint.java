@@ -15,8 +15,9 @@ import java.util.Map;
 
 @ServerEndpoint("/main")
 public class MainEndPoint {
+    public static final String UPLOAD_DIRECTORY = "/Users/den/Documents/syncW7/frok";
+
     private static final ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
-    private static final String UPLOAD_DIRECTORY = "/Users/den/Documents/syncW7/frok";
     private static final String PHOTOS_EXTENSION = ".jpg";
 
     private Session session;
@@ -26,7 +27,12 @@ public class MainEndPoint {
         try {
             this.session = session;
 
-            downloadImagesAndLearn(msg);
+            if (msg.contains("download_train")) {
+                downloadImagesAndLearn(msg);
+            } else if (msg.contains("recognize")) {
+                recognize(msg);
+            }
+
         } catch (IOException e) {
             try {
                 session.getBasicRemote().sendText("error : cant't connect to classifier");
@@ -35,15 +41,6 @@ public class MainEndPoint {
                 e1.printStackTrace();
             }
         }
-
-        try {
-            session.getBasicRemote().sendText("test");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-//        } catch (Exception e) {
-//
-//        }
     }
 
     private void downloadImagesAndLearn(String msg) throws IOException {
@@ -57,19 +54,40 @@ public class MainEndPoint {
                     // parse photo_id from link
                     String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
                     // save file by url
-                    FileUtils.copyURLToFile(new URL(link), new File( UPLOAD_DIRECTORY + File.separator +
-                                                                     userId + File.separator +
-                                                                     "photos" + File.separator +
-                                                                     photoId + PHOTOS_EXTENSION));
+                    File imageFile = new File( UPLOAD_DIRECTORY + File.separator +
+                                               userId + File.separator +
+                                               "photos" + File.separator +
+                                               photoId + PHOTOS_EXTENSION);
+                    if (!imageFile.exists()) {
+                        FileUtils.copyURLToFile(new URL(link), imageFile);
+                    }
                 }
+
+                File faceDir = new File( UPLOAD_DIRECTORY + File.separator +
+                                         userId + File.separator +
+                                         "faces");
+                faceDir.mkdir();
             }
 
             // send learn command to classifier
             Classifier.getInstance().send("{\"cmd\":\"train\", \"ids\":[\"" + userId + "\"]}");
 
-            // get response from classifier
-            session.getBasicRemote().sendText(Classifier.getInstance().recieve());
+            // get response from classifier and send to android
+
+            String recieve = Classifier.getInstance().recieve();
+            session.getBasicRemote().sendText(recieve);
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void recognize(String msg) {
+        try {
+            Classifier.getInstance().send(msg);
+
+            String recieve = Classifier.getInstance().recieve();
+            session.getBasicRemote().sendText(recieve);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
