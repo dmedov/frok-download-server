@@ -31,8 +31,15 @@ public class MainEndPoint {
                 downloadImagesAndLearn(msg);
             } else if (msg.contains("recognize")) {
                 recognize(msg);
-            }
+            } else if (msg.contains("get_faces")) {
 
+                Map<String,Object> jsonMap = mapper.readValue(msg, Map.class);
+                downloadImage((String)jsonMap.get("user_id"), (String)jsonMap.get("link"));
+
+                Classifier.getInstance().send(msg);
+                String recieve = Classifier.getInstance().recieve();
+                session.getBasicRemote().sendText(recieve);
+            }
         } catch (IOException e) {
             try {
                 session.getBasicRemote().sendText("error : cant't connect to classifier");
@@ -46,28 +53,7 @@ public class MainEndPoint {
     private void downloadImagesAndLearn(String msg) throws IOException {
         Map<String,Object> jsonMap = mapper.readValue(msg, Map.class);
         try {
-            String userId = (String) jsonMap.get("user_id");
-
-            List<String> photoLinks = (ArrayList) jsonMap.get("photos");
-            if (photoLinks != null) {
-                for (String link : photoLinks) {
-                    // parse photo_id from link
-                    String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
-                    // save file by url
-                    File imageFile = new File( UPLOAD_DIRECTORY + File.separator +
-                                               userId + File.separator +
-                                               "photos" + File.separator +
-                                               photoId + PHOTOS_EXTENSION);
-                    if (!imageFile.exists()) {
-                        FileUtils.copyURLToFile(new URL(link), imageFile);
-                    }
-                }
-
-                File faceDir = new File( UPLOAD_DIRECTORY + File.separator +
-                                         userId + File.separator +
-                                         "faces");
-                faceDir.mkdir();
-            }
+            String userId = downloadImages(jsonMap);
 
             // send learn command to classifier
             Classifier.getInstance().send("{\"cmd\":\"train\", \"ids\":[\"" + userId + "\"]}");
@@ -78,6 +64,36 @@ public class MainEndPoint {
             session.getBasicRemote().sendText(recieve);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private String downloadImages(Map<String, Object> jsonMap) throws IOException {
+        String userId = (String) jsonMap.get("user_id");
+
+        List<String> photoLinks = (ArrayList) jsonMap.get("photos");
+        if (photoLinks != null) {
+            for (String link : photoLinks) {
+                // parse photo_id from link
+                downloadImage(userId, link);
+            }
+
+            File faceDir = new File( UPLOAD_DIRECTORY + File.separator +
+                                     userId + File.separator +
+                                     "faces");
+            faceDir.mkdir();
+        }
+        return userId;
+    }
+
+    private void downloadImage(String userId, String link) throws IOException {
+        String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
+        // save file by url
+        File imageFile = new File( UPLOAD_DIRECTORY + File.separator +
+                                   userId + File.separator +
+                                   "photos" + File.separator +
+                                   photoId + PHOTOS_EXTENSION);
+        if (!imageFile.exists()) {
+            FileUtils.copyURLToFile(new URL(link), imageFile);
         }
     }
 
