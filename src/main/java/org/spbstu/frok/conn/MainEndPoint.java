@@ -16,9 +16,8 @@ import java.util.Map;
 @ServerEndpoint("/main")
 public class MainEndPoint {
     public static final String UPLOAD_DIRECTORY = "/Users/den/Documents/syncW7/frok";
-
-    private static final ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
     private static final String PHOTOS_EXTENSION = ".jpg";
+    private static final ObjectMapper MAPPER = new ObjectMapper(); // can reuse, share globally
 
     private Session session;
 
@@ -29,16 +28,20 @@ public class MainEndPoint {
 
             if (msg.contains("download_train")) {
                 downloadImagesAndLearn(msg);
+                clearPhotoFolder((String) MAPPER.readValue(msg, Map.class).get("user_id"));
             } else if (msg.contains("recognize")) {
                 recognize(msg);
             } else if (msg.contains("get_faces")) {
-
-                Map<String,Object> jsonMap = mapper.readValue(msg, Map.class);
-                downloadImage((String)jsonMap.get("user_id"), (String)jsonMap.get("link"));
-
+                getFaces(msg);
+            } else if (msg.contains("save_face")) {
+                makeFaceDir((String) MAPPER.readValue(msg, Map.class).get("user_id"));
                 Classifier.getInstance().send(msg);
                 String recieve = Classifier.getInstance().recieve();
-                session.getBasicRemote().sendText(recieve);
+            } else if (msg.contains("train")) {
+                List<String> ids = (ArrayList) MAPPER.readValue(msg, Map.class).get("ids");
+                clearPhotoFolder(ids.get(0));
+                Classifier.getInstance().send(msg);
+                String recieve = Classifier.getInstance().recieve();
             }
         } catch (IOException e) {
             try {
@@ -50,10 +53,28 @@ public class MainEndPoint {
         }
     }
 
+    private void getFaces(String msg) throws IOException {
+        Map<String,Object> jsonMap = MAPPER.readValue(msg, Map.class);
+        downloadImage((String) jsonMap.get("user_id"), (String) jsonMap.get("link"));
+
+        Classifier.getInstance().send(msg);
+
+        String recieve = Classifier.getInstance().recieve();
+        Map<String,Object> jsonResult = MAPPER.readValue(recieve, Map.class);
+
+        jsonResult.put("photo_id", jsonMap.get("photo_id"));
+        CharArrayWriter w = new CharArrayWriter();
+        MAPPER.writeValue(w, jsonResult);
+
+        session.getBasicRemote().sendText(w.toString());
+        String success = Classifier.getInstance().recieve();
+    }
+
     private void downloadImagesAndLearn(String msg) throws IOException {
-        Map<String,Object> jsonMap = mapper.readValue(msg, Map.class);
+        Map<String,Object> jsonMap = MAPPER.readValue(msg, Map.class);
         try {
-            String userId = downloadImages(jsonMap);
+            String userId = (String) jsonMap.get("user_id");
+            downloadImages(jsonMap);
 
             // send learn command to classifier
             Classifier.getInstance().send("{\"cmd\":\"train\", \"ids\":[\"" + userId + "\"]}");
@@ -67,7 +88,7 @@ public class MainEndPoint {
         }
     }
 
-    private String downloadImages(Map<String, Object> jsonMap) throws IOException {
+    private void downloadImages(Map<String, Object> jsonMap) throws IOException {
         String userId = (String) jsonMap.get("user_id");
 
         List<String> photoLinks = (ArrayList) jsonMap.get("photos");
@@ -77,12 +98,26 @@ public class MainEndPoint {
                 downloadImage(userId, link);
             }
 
-            File faceDir = new File( UPLOAD_DIRECTORY + File.separator +
-                                     userId + File.separator +
-                                     "faces");
+            makeFaceDir(userId);
+        }
+    }
+
+    private void makeFaceDir(String userId) {
+        File faceDir = new File( UPLOAD_DIRECTORY + File.separator +
+                                 userId + File.separator +
+                                 "faces");
+        if (!faceDir.exists()) {
             faceDir.mkdir();
         }
-        return userId;
+    }
+
+    private void clearPhotoFolder(String userId) throws IOException {
+        File photoFolder = new File( UPLOAD_DIRECTORY + File.separator +
+                                   userId + File.separator + "photos");
+
+        if (photoFolder.exists()) {
+            FileUtils.cleanDirectory(photoFolder);
+        }
     }
 
     private void downloadImage(String userId, String link) throws IOException {
