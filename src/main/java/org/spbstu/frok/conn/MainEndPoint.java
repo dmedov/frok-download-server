@@ -42,6 +42,20 @@ public class MainEndPoint {
                 clearPhotoFolder(ids.get(0));
                 Classifier.getInstance().send(msg);
                 String recieve = Classifier.getInstance().recieve();
+            } else if (msg.contains("alarm_rec")) {
+                Map jsonMap = MAPPER.readValue(msg, Map.class);
+                String userId = (String) jsonMap.get("user_id");
+                makeFaceDir(userId);
+                downloadImageToTargetDir((String)jsonMap.get("link"));
+                msg = msg.replace("alarm_rec", "recognize");
+
+                try {
+                    Classifier.getInstance().send(msg);
+                    String recieve = Classifier.getInstance().recieve();
+                    session.getBasicRemote().sendText(recieve);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         } catch (IOException e) {
             try {
@@ -127,6 +141,16 @@ public class MainEndPoint {
                                    userId + File.separator +
                                    "photos" + File.separator +
                                    photoId + PHOTOS_EXTENSION);
+        if (!imageFile.exists()) {
+            FileUtils.copyURLToFile(new URL(link), imageFile);
+        }
+    }
+
+    private void downloadImageToTargetDir(String link) throws IOException {
+        String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
+        // save file by url
+        File imageFile = new File( UPLOAD_DIRECTORY + File.separator +
+                                   "1" + File.separator + photoId + PHOTOS_EXTENSION);
         if (!imageFile.exists()) {
             FileUtils.copyURLToFile(new URL(link), imageFile);
         }
