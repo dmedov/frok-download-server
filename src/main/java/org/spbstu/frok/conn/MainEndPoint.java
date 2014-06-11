@@ -16,6 +16,8 @@ import java.util.Map;
 @ServerEndpoint("/main")
 public class MainEndPoint {
     public static final String UPLOAD_DIRECTORY = "/Users/den/Documents/syncW7/frok";
+    public static final String TARGET_DIRECTORY = "/Users/den/Documents/syncW7/frok/1";
+
     private static final String PHOTOS_EXTENSION = ".jpg";
     private static final ObjectMapper MAPPER = new ObjectMapper(); // can reuse, share globally
 

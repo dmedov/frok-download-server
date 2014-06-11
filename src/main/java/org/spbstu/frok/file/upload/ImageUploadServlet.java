@@ -12,7 +12,7 @@ import javax.servlet.http.Part;
 import java.io.*;
 
 @WebServlet(urlPatterns = {"/imageupload"})
-@MultipartConfig(location = "/Users/den/Documents/syncW7/frok/1")
+@MultipartConfig(location = MainEndPoint.TARGET_DIRECTORY)
 public class ImageUploadServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
