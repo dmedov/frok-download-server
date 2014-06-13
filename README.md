@@ -20,3 +20,5 @@ Username = admin Password = admin
 2) Заходим в Deployments, добавляем frok:war
 
 3) Ставим галку "use custom context root" и вписываем "/frok"
+
+4) В файле  src/main/java/org/spbstu/frok/conn/MainEndPoint.java устанавливаем для переменных UPLOAD_DIRECTORY и TARGET_DIRECTORY такие же значения как и при настройке классификатора в пункте 8. 
