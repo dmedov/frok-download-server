@@ -19,4 +19,4 @@ Username = admin Password = admin
 
 2) Заходим в Deployments, добавляем frok:war
 
-3) Зупскаем
+3) Ставим галку "use custom context root" и вписываем "/frok"
