@@ -15,8 +15,8 @@ import java.util.Map;
 
 @ServerEndpoint("/main")
 public class MainEndPoint {
-    public static final String UPLOAD_DIRECTORY = "/Users/den/Documents/syncW7/frok";
-    public static final String TARGET_DIRECTORY = "/Users/den/Documents/syncW7/frok/1";
+    public static final String UPLOAD_DIRECTORY = "/home/zda/faces";
+    public static final String TARGET_DIRECTORY = "/home/zda/faces";
 
     private static final String PHOTOS_EXTENSION = ".jpg";
     private static final ObjectMapper MAPPER = new ObjectMapper(); // can reuse, share globally
@@ -30,17 +30,17 @@ public class MainEndPoint {
 
             if (msg.contains("download_train")) {
                 downloadImagesAndLearn(msg);
-                clearPhotoFolder((String) MAPPER.readValue(msg, Map.class).get("user_id"));
+                clearPhotoFolder((String) MAPPER.readValue(msg, Map.class).get("userId"));
             } else if (msg.contains("recognize")) {
                 recognize(msg);
-            } else if (msg.contains("get_faces")) {
+            } else if (msg.contains("getFaces")) {
                 getFaces(msg);
-            } else if (msg.contains("save_face")) {
-                makeFaceDir((String) MAPPER.readValue(msg, Map.class).get("user_id"));
+            } else if (msg.contains("addFace")) {
+                makeFaceDir((String) MAPPER.readValue(msg, Map.class).get("userId"));
                 Classifier.getInstance().send(msg);
                 String recieve = Classifier.getInstance().recieve();
             } else if (msg.contains("train")) {
-                List<String> ids = (ArrayList) MAPPER.readValue(msg, Map.class).get("ids");
+                List<String> ids = (ArrayList) MAPPER.readValue(msg, Map.class).get("arrUserIds");
                 clearPhotoFolder(ids.get(0));
                 Classifier.getInstance().send(msg);
                 String recieve = Classifier.getInstance().recieve();
@@ -50,7 +50,8 @@ public class MainEndPoint {
                 makeFaceDir(userId);
                 downloadImageToTargetDir((String)jsonMap.get("link"));
                 msg = msg.replace("alarm_rec", "recognize");
-
+                msg = msg.replace("user_id", "userId");
+                msg = msg.replace("photo_id", "photoName");
                 try {
                     Classifier.getInstance().send(msg);
                     String recieve = Classifier.getInstance().recieve();
@@ -71,14 +72,14 @@ public class MainEndPoint {
 
     private void getFaces(String msg) throws IOException {
         Map<String,Object> jsonMap = MAPPER.readValue(msg, Map.class);
-        downloadImage((String) jsonMap.get("user_id"), (String) jsonMap.get("link"));
+        downloadImage((String) jsonMap.get("userId"), (String) jsonMap.get("link"));
 
         Classifier.getInstance().send(msg);
 
         String recieve = Classifier.getInstance().recieve();
         Map<String,Object> jsonResult = MAPPER.readValue(recieve, Map.class);
 
-        jsonResult.put("photo_id", jsonMap.get("photo_id"));
+        jsonResult.put("photoName", jsonMap.get("photoName"));
         CharArrayWriter w = new CharArrayWriter();
         MAPPER.writeValue(w, jsonResult);
 
@@ -89,11 +90,11 @@ public class MainEndPoint {
     private void downloadImagesAndLearn(String msg) throws IOException {
         Map<String,Object> jsonMap = MAPPER.readValue(msg, Map.class);
         try {
-            String userId = (String) jsonMap.get("user_id");
+            String userId = (String) jsonMap.get("userId");
             downloadImages(jsonMap);
 
             // send learn command to classifier
-            Classifier.getInstance().send("{\"cmd\":\"train\", \"ids\":[\"" + userId + "\"]}");
+            Classifier.getInstance().send("{\"cmd\":\"train\", \"arrUserIds\":[\"" + userId + "\"]}");
 
             // get response from classifier and send to android
 
@@ -105,7 +106,7 @@ public class MainEndPoint {
     }
 
     private void downloadImages(Map<String, Object> jsonMap) throws IOException {
-        String userId = (String) jsonMap.get("user_id");
+        String userId = (String) jsonMap.get("userId");
 
         List<String> photoLinks = (ArrayList) jsonMap.get("photos");
         if (photoLinks != null) {

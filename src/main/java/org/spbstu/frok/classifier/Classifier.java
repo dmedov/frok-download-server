@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class Classifier
 {
-    private static final String  IP   = "10.211.55.8";
+    private static final String  IP   = "127.0.0.1";
     private static final Integer PORT = 27015;
 
     private static Classifier INSTANCE = new Classifier();
@@ -61,6 +61,7 @@ public class Classifier
             e.printStackTrace();
         }
 
+        clearSocket();
         return null;
     }
 }
