@@ -12,9 +12,9 @@ import java.io.InputStream;
 public class Config {
     Properties prop = new Properties();
 
-
     public static final String CONFIG_FILENAME = "/etc/frok/frok-ds.conf";
 
+// Names of parameters
     public static final String PHOTO_BASE_PATH_PARAM = "PHOTO_BASE_PATH";
     public static final String TARGET_PHOTO_PATH_PARAM = "TARGET_PHOTOS_PATH";
     public static final String CLASSIFIER_ADDRESS_PARAM = "FROK_SERVER";
@@ -46,12 +46,10 @@ public class Config {
                     e.printStackTrace();
                 }
             }
-
         }
         return;
     }
-    public String getParamValue(String param)
-    {
+    public String getParamValue(String param) {
         return prop.getProperty(param);
     }
 }
