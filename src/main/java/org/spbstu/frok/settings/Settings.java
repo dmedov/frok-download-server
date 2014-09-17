@@ -7,6 +7,7 @@ package org.spbstu.frok.settings;
 import sun.org.mozilla.javascript.ast.NumberLiteral;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 class ClassifierAddress {
@@ -19,29 +20,30 @@ class ClassifierAddress {
 }
 
 public class Settings {
+    public static final String CONFIG_FILENAME = "/etc/frok/frok-ds.conf";
+
     private static final char pSeparator = '=';
     private static final String pName_photoBasePath = "PHOTO_BASE_PATH";
     private static final String pName_targetPhotosPath = "TARGET_PHOTOS_PATH";
-    private static final String pName_classifierAddress = "TARGET_PHOTOS_PATH";
+    private static final String pName_classifierAddress = "FROK_SERVER";
     private String photoBasePath = new String();
     private String targetPhotosPath = new String();
-    private List<ClassifierAddress> classifierAddress;
+    private List<ClassifierAddress> classifierAddress = new ArrayList<>();
 
     private static Settings INSTANCE;
 
     private Settings() {}
 
-    public static Settings getInstance()
-    {
+    public static Settings getInstance() {
         if(INSTANCE == null)
         {
             INSTANCE = new Settings();
+            INSTANCE.parseConfigFile(CONFIG_FILENAME);
         }
         return INSTANCE;
     }
 
-    public boolean parseConfigFile(String fileName)
-    {
+    private boolean parseConfigFile(String fileName) {
         File fp = new File(fileName);
         if(fp.canRead()) {
             BufferedReader reader = null;
@@ -64,9 +66,11 @@ public class Settings {
                         String ipAndPort = line.substring(sIndex);
                         // Format is 127.0.0.1:27015
                         sIndex = ipAndPort.indexOf(':');
-                        String ip =  ipAndPort.substring(0, sIndex - 1);
-                        String port =  ipAndPort.substring(0, sIndex + 1);
-                        classifierAddress.add(new ClassifierAddress(ip, Integer.getInteger(port)));
+                        if(sIndex < ipAndPort.length()) {
+                            String ip = ipAndPort.substring(0, sIndex);
+                            String port = ipAndPort.substring(sIndex + 1);
+                            classifierAddress.add(new ClassifierAddress(ip, Integer.parseInt(port)));
+                        }
                     }
                     else if(line.contains(pName_photoBasePath)) {
                         int sIndex = line.indexOf(pSeparator) + 1;
@@ -82,10 +86,11 @@ public class Settings {
                         }
                         targetPhotosPath = line.substring(sIndex);
                     }
-                    // Parsing this shit here
                 }
+                reader.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
         }
         else {
@@ -94,18 +99,15 @@ public class Settings {
         return true;
     }
 
-    public List<ClassifierAddress> getClassifiers()
-    {
+    public List<ClassifierAddress> getClassifiers() {
         return classifierAddress;
     }
 
-    public String getPhotoBasePath()
-    {
+    public String getPhotoBasePath() {
         return photoBasePath;
     }
 
-    public String getTargetPhotosPath()
-    {
+    public String getTargetPhotosPath() {
         return targetPhotosPath;
     }
 }
