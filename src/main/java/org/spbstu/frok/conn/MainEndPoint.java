@@ -3,7 +3,7 @@ package org.spbstu.frok.conn;
 import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.spbstu.frok.classifier.Classifier;
-import org.spbstu.frok.settings.Settings;
+import org.spbstu.frok.config.Config;
 
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
@@ -16,10 +16,6 @@ import java.util.Map;
 
 @ServerEndpoint("/main")
 public class MainEndPoint {
-
-    //public static final String UPLOAD_DIRECTORY = "/home/zda/faces";
-    //public static final String TARGET_DIRECTORY = "/home/zda/faces";
-
     private static final String PHOTOS_EXTENSION = ".jpg";
     private static final ObjectMapper MAPPER = new ObjectMapper(); // can reuse, share globally
 
@@ -121,7 +117,7 @@ public class MainEndPoint {
     }
 
     private void makeFaceDir(String userId) {
-        File faceDir = new File( Settings.getInstance().getPhotoBasePath() + File.separator +
+        File faceDir = new File( Config.getInstance().getParamValue(Config.PHOTO_BASE_PATH_PARAM) + File.separator +
                                  userId + File.separator +
                                  "faces");
         if (!faceDir.exists()) {
@@ -130,7 +126,7 @@ public class MainEndPoint {
     }
 
     private void clearPhotoFolder(String userId) throws IOException {
-        File photoFolder = new File( Settings.getInstance().getPhotoBasePath() + File.separator +
+        File photoFolder = new File( Config.getInstance().getParamValue(Config.PHOTO_BASE_PATH_PARAM) + File.separator +
                                    userId + File.separator + "photos");
 
         if (photoFolder.exists()) {
@@ -141,7 +137,7 @@ public class MainEndPoint {
     private void downloadImage(String userId, String link) throws IOException {
         String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
         // save file by url
-        File imageFile = new File( Settings.getInstance().getPhotoBasePath() + File.separator +
+        File imageFile = new File( Config.getInstance().getParamValue(Config.PHOTO_BASE_PATH_PARAM) + File.separator +
                                    userId + File.separator +
                                    "photos" + File.separator +
                                    photoId + PHOTOS_EXTENSION);
@@ -153,7 +149,7 @@ public class MainEndPoint {
     private void downloadImageToTargetDir(String link) throws IOException {
         String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
         // save file by url
-        File imageFile = new File( Settings.getInstance().getTargetPhotosPath() + File.separator + photoId + PHOTOS_EXTENSION);
+        File imageFile = new File( Config.getInstance().getParamValue(Config.TARGET_PHOTO_PATH_PARAM) + File.separator + photoId + PHOTOS_EXTENSION);
         if (!imageFile.exists()) {
             FileUtils.copyURLToFile(new URL(link), imageFile);
         }
