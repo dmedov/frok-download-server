@@ -44,7 +44,7 @@ public class Classifier
         }
     }
 
-    public String recieve() throws IOException {
+    public String receive() throws IOException {
         if (socket == null || !socket.isConnected() || socket.isClosed()) {
             clearSocket();
             connect();

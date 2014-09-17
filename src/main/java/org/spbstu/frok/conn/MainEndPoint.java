@@ -38,24 +38,23 @@ public class MainEndPoint {
             } else if (msg.contains("addFace")) {
                 makeFaceDir((String) MAPPER.readValue(msg, Map.class).get("userId"));
                 Classifier.getInstance().send(msg);
-                String recieve = Classifier.getInstance().recieve();
+                String receive = Classifier.getInstance().receive();
             } else if (msg.contains("train")) {
-                List<String> ids = (ArrayList) MAPPER.readValue(msg, Map.class).get("arrUserIds");
+                List<String> ids = (ArrayList) MAPPER.readValue(msg, Map.class).get("userIds");
                 clearPhotoFolder(ids.get(0));
                 Classifier.getInstance().send(msg);
-                String recieve = Classifier.getInstance().recieve();
+                String receive = Classifier.getInstance().receive();
             } else if (msg.contains("alarm_rec")) {
                 Map jsonMap = MAPPER.readValue(msg, Map.class);
-                String userId = (String) jsonMap.get("user_id");
+                String userId = (String) jsonMap.get("userId");
                 makeFaceDir(userId);
-                downloadImageToTargetDir((String)jsonMap.get("link"));
+                downloadImageToTargetDir((String)jsonMap.get("phLink"));
                 msg = msg.replace("alarm_rec", "recognize");
-                msg = msg.replace("user_id", "userId");
-                msg = msg.replace("photo_id", "photoName");
+
                 try {
                     Classifier.getInstance().send(msg);
-                    String recieve = Classifier.getInstance().recieve();
-                    session.getBasicRemote().sendText(recieve);
+                    String receive = Classifier.getInstance().receive();
+                    session.getBasicRemote().sendText(receive);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -72,19 +71,19 @@ public class MainEndPoint {
 
     private void getFaces(String msg) throws IOException {
         Map<String,Object> jsonMap = MAPPER.readValue(msg, Map.class);
-        downloadImage((String) jsonMap.get("userId"), (String) jsonMap.get("link"));
+        downloadImage((String) jsonMap.get("userId"), (String) jsonMap.get("phLink"));
 
         Classifier.getInstance().send(msg);
 
-        String recieve = Classifier.getInstance().recieve();
-        Map<String,Object> jsonResult = MAPPER.readValue(recieve, Map.class);
+        String receive = Classifier.getInstance().receive();
+        Map<String,Object> jsonResult = MAPPER.readValue(receive, Map.class);
 
-        jsonResult.put("photoName", jsonMap.get("photoName"));
+        jsonResult.put("phName", jsonMap.get("phName"));
         CharArrayWriter w = new CharArrayWriter();
         MAPPER.writeValue(w, jsonResult);
 
         session.getBasicRemote().sendText(w.toString());
-        String success = Classifier.getInstance().recieve();
+        String success = Classifier.getInstance().receive();
     }
 
     private void downloadImagesAndLearn(String msg) throws IOException {
@@ -94,12 +93,12 @@ public class MainEndPoint {
             downloadImages(jsonMap);
 
             // send learn command to classifier
-            Classifier.getInstance().send("{\"cmd\":\"train\", \"arrUserIds\":[\"" + userId + "\"]}");
+            Classifier.getInstance().send("{\"cmd\":\"train\", \"userIds\":[\"" + userId + "\"]}");
 
             // get response from classifier and send to android
 
-            String recieve = Classifier.getInstance().recieve();
-            session.getBasicRemote().sendText(recieve);
+            String receive = Classifier.getInstance().receive();
+            session.getBasicRemote().sendText(receive);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -108,7 +107,7 @@ public class MainEndPoint {
     private void downloadImages(Map<String, Object> jsonMap) throws IOException {
         String userId = (String) jsonMap.get("userId");
 
-        List<String> photoLinks = (ArrayList) jsonMap.get("photos");
+        List<String> photoLinks = (ArrayList) jsonMap.get("phLinks");
         if (photoLinks != null) {
             for (String link : photoLinks) {
                 // parse photo_id from link
@@ -163,8 +162,8 @@ public class MainEndPoint {
         try {
             Classifier.getInstance().send(msg);
 
-            String recieve = Classifier.getInstance().recieve();
-            session.getBasicRemote().sendText(recieve);
+            String receive = Classifier.getInstance().receive();
+            session.getBasicRemote().sendText(receive);
         } catch (IOException e) {
             e.printStackTrace();
         }
