@@ -18,7 +18,8 @@ public class ImageUploadServlet extends HttpServlet {
         for (Part part : request.getParts()) {
             String submittedFileName = part.getSubmittedFileName();
             if (submittedFileName != null) {
-                part.write(Config.getInstance().getParamValue(Config.TARGET_PHOTO_PATH_PARAM) + File.separator + submittedFileName);
+                part.write(Config.getInstance().getParamValue(Config.TARGET_PHOTO_PATH_PARAM)
+                        + File.separator + submittedFileName);
             }
         }
     }

@@ -149,7 +149,8 @@ public class MainEndPoint {
     private void downloadImageToTargetDir(String link) throws IOException {
         String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
         // save file by url
-        File imageFile = new File( Config.getInstance().getParamValue(Config.TARGET_PHOTO_PATH_PARAM) + File.separator + photoId + PHOTOS_EXTENSION);
+        File imageFile = new File( Config.getInstance().getParamValue(Config.TARGET_PHOTO_PATH_PARAM) + File.separator
+                + photoId + PHOTOS_EXTENSION);
         if (!imageFile.exists()) {
             FileUtils.copyURLToFile(new URL(link), imageFile);
         }
