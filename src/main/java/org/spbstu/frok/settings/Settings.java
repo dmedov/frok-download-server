@@ -14,8 +14,8 @@ class ClassifierAddress {
     private String  IP;
     private Integer PORT;
     public ClassifierAddress(String ip, Integer port) {
-        IP = new String(ip);
-        PORT = new Integer(port);
+        IP = ip;
+        PORT = port;
     }
 }
 
@@ -23,9 +23,9 @@ public class Settings {
     public static final String CONFIG_FILENAME = "/etc/frok/frok-ds.conf";
 
     private static final char pSeparator = '=';
-    private static final String pName_photoBasePath = "PHOTO_BASE_PATH";
-    private static final String pName_targetPhotosPath = "TARGET_PHOTOS_PATH";
-    private static final String pName_classifierAddress = "FROK_SERVER";
+    private static final String PHOTO_BASE_PATH_PARAM = "PHOTO_BASE_PATH";
+    private static final String TARGET_PHOTO_PATH_PARAM = "TARGET_PHOTOS_PATH";
+    private static final String CLASSIFIER_ADDRESS_PARAM = "FROK_SERVER";
     private String photoBasePath = new String();
     private String targetPhotosPath = new String();
     private List<ClassifierAddress> classifierAddress = new ArrayList<>();
@@ -35,8 +35,7 @@ public class Settings {
     private Settings() {}
 
     public static Settings getInstance() {
-        if(INSTANCE == null)
-        {
+        if(INSTANCE == null) {
             INSTANCE = new Settings();
             INSTANCE.parseConfigFile(CONFIG_FILENAME);
         }
@@ -57,7 +56,7 @@ public class Settings {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if(line.contains(pName_classifierAddress))
+                    if(line.contains(CLASSIFIER_ADDRESS_PARAM))
                     {
                         int sIndex = line.indexOf(pSeparator) + 1;
                         while(line.charAt(sIndex) == pSeparator || line.charAt(sIndex) == ' ') {
@@ -72,14 +71,14 @@ public class Settings {
                             classifierAddress.add(new ClassifierAddress(ip, Integer.parseInt(port)));
                         }
                     }
-                    else if(line.contains(pName_photoBasePath)) {
+                    else if(line.contains(PHOTO_BASE_PATH_PARAM)) {
                         int sIndex = line.indexOf(pSeparator) + 1;
                         while(line.charAt(sIndex) == pSeparator || line.charAt(sIndex) == ' ') {
                             ++sIndex;
                         }
                         photoBasePath = line.substring(sIndex);
                     }
-                    else if(line.contains(pName_targetPhotosPath)) {
+                    else if(line.contains(TARGET_PHOTO_PATH_PARAM)) {
                         int sIndex = line.indexOf(pSeparator) + 1;
                         while(line.charAt(sIndex) == pSeparator || line.charAt(sIndex) == ' ') {
                             ++sIndex;
