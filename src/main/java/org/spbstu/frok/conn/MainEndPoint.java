@@ -141,7 +141,13 @@ public class MainEndPoint {
                                    userId + File.separator +
                                    "photos" + File.separator +
                                    photoId + PHOTOS_EXTENSION);
-        if (!imageFile.exists()) {
+
+        File faceFile = new File( Config.getInstance().getParamValue(Config.PHOTO_BASE_PATH_PARAM) + File.separator +
+                userId + File.separator +
+                "faces" + File.separator +
+                photoId + PHOTOS_EXTENSION);
+
+        if (!faceFile.exists()) {
             FileUtils.copyURLToFile(new URL(link), imageFile);
         }
     }
