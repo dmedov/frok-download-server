@@ -3,6 +3,7 @@ package org.spbstu.frok.file.upload;
 import org.spbstu.frok.config.Config;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -11,6 +12,7 @@ import javax.servlet.http.Part;
 import java.io.*;
 
 @WebServlet(urlPatterns = {"/imageupload"})
+@MultipartConfig(location="/home/user/faces")
 public class ImageUploadServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
