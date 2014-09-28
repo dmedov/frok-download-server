@@ -28,11 +28,8 @@ public class Classifier
     }
 
     public void send(String data) throws IOException {
-        if (socket == null || !socket.isConnected() || socket.isClosed()) {
-            clearSocket();
-            connect();
-        }
-
+        clearSocket();
+        connect();
         socketOutputStream.write(data.getBytes());
     }
 
