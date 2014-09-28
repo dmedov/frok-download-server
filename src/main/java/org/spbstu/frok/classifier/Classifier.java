@@ -1,90 +1,80 @@
 package org.spbstu.frok.classifier;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.util.JSONPObject;
 import org.spbstu.frok.config.Config;
 
 import java.io.*;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Classifier {
     private static final ObjectMapper MAPPER = new ObjectMapper(); // can reuse, share globally
-    private static Classifier INSTANCE;
+    private static Classifier INSTANCE = null;
 
-    private static List<ClassifierConnector> classifiers;
+    private static LinkedList<ClassifierConnector> classifiersList = new LinkedList<ClassifierConnector>();
+    private static Iterator classifierIterator;
 
     private static HashMap<String, String> responses = new HashMap<>();
 
     // Synchronize methods
-    private static Semaphore sema;
+    private final Lock classifierCS = new ReentrantLock(true);
     Integer reqId = new Integer(0);
 
     private Classifier() {}
 
     public static Classifier getInstance() {
-        synchronized (INSTANCE) {
-            if (INSTANCE == null) {
-                INSTANCE = new Classifier();
-                String classifiersParams = Config.getInstance().getParamValue(Config.CLASSIFIER_ADDRESS_PARAM);
-                String[] addresses = classifiersParams.split(",");
-                classifiers = new ArrayList<>();
+        if (INSTANCE == null) {
+            String classifiersParams = Config.getInstance().getParamValue(Config.CLASSIFIER_ADDRESS_PARAM);
+            String[] addresses = classifiersParams.split(",");
 
-                for (int i = 0; i < addresses.length; ++i) {
-                    // [tbd] parse params and fill array list
-                    String[] addrAndPort = addresses[i].split(":");
-                    classifiers.add(new ClassifierConnector(addrAndPort[0], Integer.parseInt(addrAndPort[1]), INSTANCE));
+            for (int i = 0; i < addresses.length; ++i) {
+                // [tbd] parse params and fill array list
+                String[] addrAndPort = addresses[i].split(":");
+                ClassifierConnector connector = new ClassifierConnector(addrAndPort[0], Integer.parseInt(addrAndPort[1]));
+                try {
+                    connector.connect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    classifiersList.add(connector);
                 }
-
-                sema = new Semaphore(addresses.length, true);
             }
+
+            classifierIterator = classifiersList.listIterator();
+
+            INSTANCE = new Classifier();
         }
         return INSTANCE;
     }
 
     public String executeRequest(String request) {
-        if(classifiers.isEmpty()) {
+        if(classifiersList.isEmpty()) {
             return "{\"result\": \"fail\", \"reason\": \"No classifiers to connect. Something went totally wrong\"}";
         }
-        // Wait for ANY of classifiers is free
-        try {
-            sema.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return  "{\"result\": \"fail\", \"reason\": \"Internal error\"}";
-        }
 
-        // Ok, at least one of classifier is free. Now lets search which one is
-        int i;
-        while(true) {
-            for (i = 0; i < classifiers.size(); ++i) {
-                if (classifiers.get(i).obtain() == false)
-                    continue;
-            }
-            if (i == classifiers.size()) {
-                continue;
-            }
-            break;
-        }
-
-        // Obtained classifier #i
+        ClassifierConnector classifier = null;
         String requestResult = null;
-        ClassifierConnector classifier = classifiers.get(i);
+
+        classifierCS.lock();
+        if (!classifierIterator.hasNext()) {
+            classifierIterator = classifiersList.listIterator();
+        }
+        classifier = (ClassifierConnector) classifierIterator.next();
+        classifierCS.unlock();
 
         try {
             // Add "reqId": "###" to json
             StringBuilder stringBuilder = new StringBuilder(request);
             StringBuilder reqIdStringBuilder = new StringBuilder();
-            String reqIdStr = null;
-            synchronized (reqId) {
-                reqIdStr = String.valueOf(reqId++);
-            }
+
+            classifierCS.lock();
+            String reqIdStr = String.valueOf(reqId++);
+            classifierCS.unlock();
+
             reqIdStringBuilder.append("\"reqId\": \"").append(reqIdStr).append("\",");
-            stringBuilder.insert(stringBuilder.indexOf("{"), reqIdStringBuilder.toString());
+            stringBuilder.insert(stringBuilder.indexOf("{") + 1, reqIdStringBuilder.toString());
 
             // Send request and wait for result (It could be a timeout)
             classifier.send(stringBuilder.toString());
@@ -92,21 +82,15 @@ public class Classifier {
 
             // Search for the result in hashmap
             if(null == (requestResult = responses.get(reqIdStr))) {
-                classifier.release();
-                sema.release();
                 return "{\"result\": \"fail\", \"reason\": \"Request timeout\"}";
             }
             responses.remove(reqIdStr);
         } catch (IOException e) {
             e.printStackTrace();
-            classifier.release();
-            sema.release();
             return "{\"result\": \"fail\", \"reason\": \"Internal error\"}";
         }
 
         // Execute succeed - release obtained resources and return result
-        classifier.release();
-        sema.release();
         return requestResult;
     }
 

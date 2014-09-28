@@ -15,29 +15,17 @@ public class ClassifierConnector {
     private static String  ip;
     private static Integer port;
 
-    private static final Classifier callback = Classifier.getInstance();
     private Socket socket;
 
     private BufferedReader socketInputStream;
     private OutputStream socketOutputStream;
 
-    // Synchronize stuff
-    private Semaphore sema = new Semaphore(1, true);
-
-    protected ClassifierConnector(String ipv4Address, Integer port, Classifier callback) {
+    protected ClassifierConnector(String ipv4Address, Integer port) {
         this.ip = ipv4Address;
         this.port = port;
     }
 
-    public boolean obtain() {
-        return sema.tryAcquire();
-    }
-
-    public void release() {
-        sema.release();
-    }
-
-    private void connect() throws IOException {
+    public void connect() throws IOException {
         socket = new Socket(ip, port);
 
         socketInputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -83,6 +71,7 @@ public class ClassifierConnector {
             }
         }
 
+        final Classifier callback = Classifier.getInstance();
         Thread socketListenerThread = new Thread(new Runnable() {
             Classifier responseCallback = callback;
             @Override

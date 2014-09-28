@@ -25,7 +25,6 @@ public class MainEndPoint {
     public void onMessage(Session session, String msg) {
         try {
             this.session = session;
-
             if (msg.contains("download_train")) {
                 downloadImagesAndLearn(msg);
                 clearPhotoFolder((String) MAPPER.readValue(msg, Map.class).get("userId"));
@@ -36,10 +35,12 @@ public class MainEndPoint {
             } else if (msg.contains("addFace")) {
                 makeFaceDir((String) MAPPER.readValue(msg, Map.class).get("userId"));
                 String receive = Classifier.getInstance().executeRequest(msg);
+                session.getBasicRemote().sendText(receive);
             } else if (msg.contains("train")) {
                 List<String> ids = (ArrayList) MAPPER.readValue(msg, Map.class).get("userIds");
                 clearPhotoFolder(ids.get(0));
                 String receive = Classifier.getInstance().executeRequest(msg);
+                session.getBasicRemote().sendText(receive);
             } else if (msg.contains("alarm_rec")) {
                 Map jsonMap = MAPPER.readValue(msg, Map.class);
                 String userId = (String) jsonMap.get("userId");
@@ -56,7 +57,7 @@ public class MainEndPoint {
             }
         } catch (IOException e) {
             try {
-                session.getBasicRemote().sendText("error : can't connect to classifier");
+                session.getBasicRemote().sendText("{\"result\" : \"fail\", \"reason\": \"some error occurred\"");
                 return;
             } catch (IOException e1) {
                 e1.printStackTrace();
