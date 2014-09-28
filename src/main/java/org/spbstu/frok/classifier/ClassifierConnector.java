@@ -72,20 +72,21 @@ public class ClassifierConnector {
         }
 
         final Classifier callback = Classifier.getInstance();
+        final BufferedReader inStream = socketInputStream;
         Thread socketListenerThread = new Thread(new Runnable() {
             Classifier responseCallback = callback;
+            private BufferedReader inputStream = inStream;
             @Override
             public void run() {
+                String response = null;
                 try {
-
-                    String response;
-
-                    if ((response = socketInputStream.readLine()) != null) {
-                        responseCallback.addResponse(response);
-                    }
-                    return;
+                    do {
+                        response = inputStream.readLine();
+                    }while (response == null);
                 } catch (IOException e) {
                     e.printStackTrace();
+                } finally {
+                    responseCallback.addResponse(response);
                 }
             }
         });

@@ -20,6 +20,7 @@ public class Classifier {
 
     // Synchronize methods
     private final Lock classifierCS = new ReentrantLock(true);
+    private static final Lock resultCS = new ReentrantLock(true);
     Integer reqId = new Integer(0);
 
     private Classifier() {}
@@ -78,11 +79,16 @@ public class Classifier {
 
             // Send request and wait for result (It could be a timeout)
             classifier.send(stringBuilder.toString());
-            classifier.receive();
+            if(false == classifier.receive()) {
+                return "{\"result\": \"fail\", \"reason\": \"Request timeout\"}";
+            }
 
             // Search for the result in hashmap
-            if(null == (requestResult = responses.get(reqIdStr))) {
-                return "{\"result\": \"fail\", \"reason\": \"Request timeout\"}";
+            resultCS.lock();
+            requestResult = responses.get(reqIdStr);
+            resultCS.unlock();
+            if(null == requestResult) {
+                return "{\"result\": \"fail\", \"reason\": \"internal error\"}";
             }
             responses.remove(reqIdStr);
         } catch (IOException e) {
@@ -95,15 +101,17 @@ public class Classifier {
     }
 
     public static void addResponse(String response) {
+        resultCS.lock();
         String requestId = null;
         try {
             requestId = (String) MAPPER.readValue(response, Map.class).get("reqId");
         } catch (IOException e) {
             e.printStackTrace();
+            resultCS.unlock();
             return;
-        }
-        if(requestId != null) {
+        } finally {
             responses.put(requestId, response);
+            resultCS.unlock();
         }
     }
 }
