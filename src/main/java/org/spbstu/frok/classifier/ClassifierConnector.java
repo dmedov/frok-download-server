@@ -24,7 +24,7 @@ public class ClassifierConnector {
     // Synchronize stuff
     private Semaphore sema = new Semaphore(1, true);
 
-    private ClassifierConnector(String ipv4Address, Integer port, Classifier callback) {
+    protected ClassifierConnector(String ipv4Address, Integer port, Classifier callback) {
         this.ip = ipv4Address;
         this.port = port;
     }
