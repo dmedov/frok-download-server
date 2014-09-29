@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by zda on 28.09.14.
@@ -18,9 +20,23 @@ public class ClassifierConnector {
     private BufferedReader socketInputStream;
     private OutputStream socketOutputStream;
 
+    private static final Lock lockerCS = new ReentrantLock(true);
+    private final Lock locker = new ReentrantLock(true);
+
     protected ClassifierConnector(String ipv4Address, Integer port) {
         this.ip = ipv4Address;
         this.port = port;
+    }
+
+    public boolean acquire() {
+        lockerCS.lock();
+        locker.lock();
+        lockerCS.unlock();
+        return true;
+    }
+
+    public void release() {
+        locker.unlock();
     }
 
     public void connect() throws IOException {

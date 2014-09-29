@@ -10,13 +10,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Classifier {
-    private static final ObjectMapper MAPPER = new ObjectMapper(); // can reuse, share globally
     private static Classifier INSTANCE = null;
 
-    private static LinkedList<ClassifierConnector> classifiersList = new LinkedList<ClassifierConnector>();
-    private static Iterator classifierIterator;
+    private static LinkedList<ClassifierConnector> classifiersList = new LinkedList<>();
+    private static Iterator classifierIterator = null;
 
+    // [tbd] There should be 2 locks (1 for classifier, 2 for reqId)
     private final Lock classifierCS = new ReentrantLock(true);
+    // [tbd] make it randomized random value with some initial seeds
     Integer reqId = new Integer(0);
 
     private Classifier() {}
@@ -29,7 +30,8 @@ public class Classifier {
             for (int i = 0; i < addresses.length; ++i) {
                 // [tbd] parse params and fill array list
                 String[] addrAndPort = addresses[i].split(":");
-                ClassifierConnector connector = new ClassifierConnector(addrAndPort[0], Integer.parseInt(addrAndPort[1]));
+                ClassifierConnector connector = new ClassifierConnector(addrAndPort[0],
+                        Integer.parseInt(addrAndPort[1]));
                 try {
                     connector.connect();
                 } catch (IOException e) {
@@ -40,7 +42,6 @@ public class Classifier {
             }
 
             classifierIterator = classifiersList.listIterator();
-
             INSTANCE = new Classifier();
         }
         return INSTANCE;
@@ -51,14 +52,15 @@ public class Classifier {
             return "{\"result\": \"fail\", \"reason\": \"No classifiers to connect. Something went totally wrong\"}";
         }
 
-        ClassifierConnector classifier = null;
-        String requestResult = null;
+        ClassifierConnector classifier;
+        String requestResult;
 
         classifierCS.lock();
         if (!classifierIterator.hasNext()) {
             classifierIterator = classifiersList.listIterator();
         }
         classifier = (ClassifierConnector) classifierIterator.next();
+        classifier.acquire();
         classifierCS.unlock();
 
         try {
@@ -78,15 +80,17 @@ public class Classifier {
             requestResult = classifier.receive();
             if(null == requestResult) {
                 classifier.refreshConnection();
+                classifier.release();
                 return "{\"result\": \"fail\", \"reason\": \"internal error\"}";
             }
         } catch (IOException e) {
             e.printStackTrace();
             classifier.refreshConnection();
+            classifier.release();
             return "{\"result\": \"fail\", \"reason\": \"Internal error\"}";
         }
 
-        // Execute succeed - release obtained resources and return result
+        classifier.release();
         return requestResult;
     }
 }
