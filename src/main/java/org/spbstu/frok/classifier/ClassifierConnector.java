@@ -5,13 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by zda on 28.09.14.
- */
 public class ClassifierConnector {
     private String  ip;
     private Integer port;
@@ -47,9 +43,7 @@ public class ClassifierConnector {
     }
 
     public void send(String data) throws IOException {
-        //if (socket == null || !socket.isConnected() || socket.isClosed()) {
-            refreshConnection();
-        //}
+        refreshConnection();
         try {
             socketOutputStream.write(data.getBytes());
         } catch (IOException e) {

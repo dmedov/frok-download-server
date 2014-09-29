@@ -1,11 +1,8 @@
 package org.spbstu.frok.classifier;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.spbstu.frok.config.Config;
-
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
