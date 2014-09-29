@@ -16,11 +16,7 @@ public class Classifier {
     private static LinkedList<ClassifierConnector> classifiersList = new LinkedList<ClassifierConnector>();
     private static Iterator classifierIterator;
 
-    private static HashMap<String, String> responses = new HashMap<>();
-
-    // Synchronize methods
     private final Lock classifierCS = new ReentrantLock(true);
-    private static final Lock resultCS = new ReentrantLock(true);
     Integer reqId = new Integer(0);
 
     private Classifier() {}
@@ -50,7 +46,7 @@ public class Classifier {
         return INSTANCE;
     }
 
-    public String executeRequest(String request) {
+    public String executeRequest(String request) throws IOException {
         if(classifiersList.isEmpty()) {
             return "{\"result\": \"fail\", \"reason\": \"No classifiers to connect. Something went totally wrong\"}";
         }
@@ -79,40 +75,19 @@ public class Classifier {
 
             // Send request and wait for result (It could be a timeout)
             classifier.send(stringBuilder.toString());
-            if(false == classifier.receive()) {
-                return "{\"result\": \"fail\", \"reason\": \"Request timeout\"}";
-            }
-
-            // Search for the result in hashmap
-            resultCS.lock();
-            requestResult = responses.get(reqIdStr);
-            resultCS.unlock();
+            requestResult = classifier.receive();
             if(null == requestResult) {
+                classifier.refreshConnection();
                 return "{\"result\": \"fail\", \"reason\": \"internal error\"}";
             }
-            responses.remove(reqIdStr);
         } catch (IOException e) {
             e.printStackTrace();
+            classifier.refreshConnection();
             return "{\"result\": \"fail\", \"reason\": \"Internal error\"}";
         }
 
         // Execute succeed - release obtained resources and return result
         return requestResult;
-    }
-
-    public static void addResponse(String response) {
-        resultCS.lock();
-        String requestId = null;
-        try {
-            requestId = (String) MAPPER.readValue(response, Map.class).get("reqId");
-        } catch (IOException e) {
-            e.printStackTrace();
-            resultCS.unlock();
-            return;
-        } finally {
-            responses.put(requestId, response);
-            resultCS.unlock();
-        }
     }
 }
 
