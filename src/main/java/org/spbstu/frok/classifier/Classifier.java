@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Classifier {
     private static Classifier INSTANCE = null;
 
-    private static LinkedList<ClassifierConnector> classifiersList = new LinkedList<>();
+    private static List<ClassifierConnector> classifiersList = new LinkedList<>();
     private static Iterator classifierIterator = null;
 
     // [tbd] There should be 2 locks (1 for classifier, 2 for reqId)
@@ -78,13 +78,13 @@ public class Classifier {
             if(null == requestResult) {
                 classifier.refreshConnection();
                 classifier.release();
-                return "{\"result\": \"fail\", \"reason\": \"internal error\"}";
+                return "{\"result\": \"fail\", \"reason\": \"classifier is not connected\"}";
             }
         } catch (IOException e) {
             e.printStackTrace();
             classifier.refreshConnection();
             classifier.release();
-            return "{\"result\": \"fail\", \"reason\": \"Internal error\"}";
+            return "{\"result\": \"fail\", \"reason\": \"classifier disconnected\"}";
         }
 
         classifier.release();

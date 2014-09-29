@@ -13,8 +13,8 @@ public class ClassifierConnector {
     private Integer port;
 
     private Socket socket;
-    private BufferedReader socketInputStream;
-    private OutputStream socketOutputStream;
+    private BufferedReader socketInputStream = null;
+    private OutputStream socketOutputStream = null;
 
     private static final Lock lockerCS = new ReentrantLock(true);
     private final Lock locker = new ReentrantLock(true);
@@ -53,9 +53,6 @@ public class ClassifierConnector {
     }
 
     public void refreshConnection() throws IOException {
-        if(socket == null) {
-            socket = new Socket(ip, port);
-        }
         clearSocket();
         connect();
     }
@@ -65,20 +62,17 @@ public class ClassifierConnector {
             return null;
         }
 
-        String response = null;
-        try {
-            response = socketInputStream.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return response;
+        return socketInputStream.readLine();
     }
 
     private void clearSocket() throws IOException {
         if (socket != null) {
             socket.close();
+        }
+        if (socketOutputStream != null) {
             socketOutputStream.close();
+        }
+        if(socketInputStream != null) {
             socketInputStream.close();
         }
     }
