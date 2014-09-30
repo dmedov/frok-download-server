@@ -10,6 +10,7 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -123,15 +124,29 @@ public class MainEndPoint {
     private void downloadImage(String userId, String link) throws IOException {
         String photoId = link.substring(link.indexOf("?") + 9, link.indexOf("&"));
         // save file by url
-        File imageFile = new File( Config.getInstance().getParamValue(Config.PHOTO_BASE_PATH_PARAM) + File.separator +
-                                   userId + File.separator +
-                                   "photos" + File.separator +
+        String userDirPath = Config.getInstance().getParamValue(Config.PHOTO_BASE_PATH_PARAM) + File.separator +
+                userId;
+
+        String userPhotosDir = userDirPath + File.separator + "photos";
+        String userFacesDir  = userDirPath + File.separator + "faces";
+
+        File imageFile = new File( userPhotosDir + File.separator +
                                    photoId + PHOTOS_EXTENSION);
 
-        File faceFile = new File( Config.getInstance().getParamValue(Config.PHOTO_BASE_PATH_PARAM) + File.separator +
-                userId + File.separator +
-                "faces" + File.separator +
-                photoId + PHOTOS_EXTENSION);
+        File faceFile = new File(userFacesDir + File.separator +
+                                   photoId + PHOTOS_EXTENSION);
+
+        // check if we try download image which user faces recognized for this image
+        // we delete faces file from userFacesDir contains photoId in his names
+        File dir = new File(userFacesDir);
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File child : files) {
+                if (child.getName().contains(photoId)) {
+                    Files.delete(child.toPath());
+                }
+            }
+        }
 
         if (!faceFile.exists()) {
             FileUtils.copyURLToFile(new URL(link), imageFile);
