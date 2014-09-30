@@ -25,7 +25,6 @@ public class MainEndPoint {
     public void onMessage(Session session, String msg) {
         try {
             this.session = session;
-
             if (msg.contains("download_train")) {
                 downloadImagesAndLearn(msg);
                 clearPhotoFolder((String) MAPPER.readValue(msg, Map.class).get("userId"));
@@ -35,13 +34,13 @@ public class MainEndPoint {
                 getFaces(msg);
             } else if (msg.contains("addFace")) {
                 makeFaceDir((String) MAPPER.readValue(msg, Map.class).get("userId"));
-                Classifier.getInstance().send(msg);
-                String receive = Classifier.getInstance().receive();
+                String receive = Classifier.getInstance().executeRequest(msg);
+                session.getBasicRemote().sendText(receive);
             } else if (msg.contains("train")) {
                 List<String> ids = (ArrayList) MAPPER.readValue(msg, Map.class).get("userIds");
                 clearPhotoFolder(ids.get(0));
-                Classifier.getInstance().send(msg);
-                String receive = Classifier.getInstance().receive();
+                String receive = Classifier.getInstance().executeRequest(msg);
+                session.getBasicRemote().sendText(receive);
             } else if (msg.contains("alarm_rec")) {
                 Map jsonMap = MAPPER.readValue(msg, Map.class);
                 String userId = (String) jsonMap.get("userId");
@@ -50,8 +49,7 @@ public class MainEndPoint {
                 msg = msg.replace("alarm_rec", "recognize");
 
                 try {
-                    Classifier.getInstance().send(msg);
-                    String receive = Classifier.getInstance().receive();
+                    String receive = Classifier.getInstance().executeRequest(msg);
                     session.getBasicRemote().sendText(receive);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -59,7 +57,7 @@ public class MainEndPoint {
             }
         } catch (IOException e) {
             try {
-                session.getBasicRemote().sendText("error : can't connect to classifier");
+                session.getBasicRemote().sendText("{\"result\" : \"fail\", \"reason\": \"some error occurred\"");
                 return;
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -71,17 +69,8 @@ public class MainEndPoint {
         Map<String,Object> jsonMap = MAPPER.readValue(msg, Map.class);
         downloadImage((String) jsonMap.get("userId"), (String) jsonMap.get("phLink"));
 
-        Classifier.getInstance().send(msg);
-
-        String receive = Classifier.getInstance().receive();
-        Map<String,Object> jsonResult = MAPPER.readValue(receive, Map.class);
-
-        jsonResult.put("phName", jsonMap.get("phName"));
-        CharArrayWriter w = new CharArrayWriter();
-        MAPPER.writeValue(w, jsonResult);
-
-        session.getBasicRemote().sendText(w.toString());
-        String success = Classifier.getInstance().receive();
+        String receive = Classifier.getInstance().executeRequest(msg);
+        session.getBasicRemote().sendText(receive);
     }
 
     private void downloadImagesAndLearn(String msg) throws IOException {
@@ -91,11 +80,8 @@ public class MainEndPoint {
             downloadImages(jsonMap);
 
             // send learn command to classifier
-            Classifier.getInstance().send("{\"cmd\":\"train\", \"userIds\":[\"" + userId + "\"]}");
-
             // get response from classifier and send to android
-
-            String receive = Classifier.getInstance().receive();
+            String receive = Classifier.getInstance().executeRequest("{\"cmd\":\"train\", \"userIds\":[\"" + userId + "\"]}");
             session.getBasicRemote().sendText(receive);
         } catch (Exception e) {
             e.printStackTrace();
@@ -164,9 +150,7 @@ public class MainEndPoint {
 
     private void recognize(String msg) {
         try {
-            Classifier.getInstance().send(msg);
-
-            String receive = Classifier.getInstance().receive();
+            String receive = Classifier.getInstance().executeRequest(msg);
             session.getBasicRemote().sendText(receive);
         } catch (IOException e) {
             e.printStackTrace();

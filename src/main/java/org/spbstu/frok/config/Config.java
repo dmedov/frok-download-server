@@ -1,9 +1,5 @@
 package org.spbstu.frok.config;
 
-/**
- * Created by zda on 17.09.14.
- */
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
