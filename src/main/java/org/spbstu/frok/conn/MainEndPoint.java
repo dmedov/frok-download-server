@@ -71,6 +71,10 @@ public class MainEndPoint {
         downloadImage((String) jsonMap.get("userId"), (String) jsonMap.get("phLink"));
 
         String receive = Classifier.getInstance().executeRequest(msg);
+
+        // add phName to classifier result
+        String phName = ",\"phName\":\"" + jsonMap.get("phName") + "\"";
+        receive = new StringBuilder(receive).insert(receive.lastIndexOf("\"") + 1, phName).toString();
         session.getBasicRemote().sendText(receive);
     }
 
