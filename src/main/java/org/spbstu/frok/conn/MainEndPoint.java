@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @ServerEndpoint("/main")
 public class MainEndPoint {
@@ -146,13 +147,13 @@ public class MainEndPoint {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File child : files) {
-                if (child.getName().contains(photoId)) {
-                    Files.delete(child.toPath());
+                if (child.getAbsolutePath().contains(photoId)) {
+                    child.delete();
                 }
             }
         }
 
-        if (!faceFile.exists()) {
+        if (!imageFile.exists()) {
             FileUtils.copyURLToFile(new URL(link), imageFile);
         }
     }
