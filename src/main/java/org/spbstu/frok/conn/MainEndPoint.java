@@ -147,7 +147,7 @@ public class MainEndPoint {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File child : files) {
-                if (child.getAbsolutePath().contains(photoId)) {
+                if (child.getName().contains(photoId)) {
                     child.delete();
                 }
             }
